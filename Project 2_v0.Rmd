@@ -1,0 +1,208 @@
+---
+title: "Data624_group1_Project2"
+author: "Valerie Briot"
+date: "May 7, 2018"
+output: word_document
+---
+
+# Business Case 
+
+A new regulations by the FDA forces the ABC company to understand our manufacturing process as it relates to the pH of the bevrages we produced. To this effect, a predictive model has been commissioned by the Production manager to better understand the predictive factors and report on the predictive model of pH.  
+
+##Business Considrations  
+
+* VB- To be determined, level of accuracy, complexity, ... based on our models results*
+
+## Deliverables 
+
+* A Executive level report of the findings
+* A Detail tecnical reports to be reviewed by an outside consultant 
+
+## Thecnical Considerations 
+
+The team is opeating under a ver tight deadline, the deliverables have to be remitted on 05/22/2018. Since the team is operating remotely in various location, the following tools were adopted to enhanced efficient communication; 
+
+* Slack was used for daily communication during the project and for quick access to code and documentation.
+* GoToMeeting was utilized for regular touch point meetings and on as needed basis.  
+* Github was used for version control management and to ensure each team member had access to the latest version of the project documentation
+* R was used to perform analysis, R code can be found in Appendix A for Technical report 
+
+**Team Members**  
+Prashant Bhuyan (Team Leader)  
+Bruce Hao  
+Cheryl Bowersox  
+Chris Estevez  
+Valerie Briot  
+
+```{r Libraries, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(DataExplorer) #EDA
+library(psych)        #EDA, describe function  
+library(tidyverse)    #
+library(knitr)        #
+library(VIM)          #
+```
+
+
+# Data Set
+
+The analysis will be performed on historical data. For reproducibility of the results, the data was loaded to and accessed from a Github repository.  
+
+```{r Load_data, echo=FALSE, message=FALSE, warning=FALSE}
+
+#set file name - to be change by github link#
+beverage_filname <- "StudentData.csv"
+
+# Load Trainning Data Set
+beverages <-read.csv(beverage_filname, header=TRUE, sep=",")
+
+#From DataExplorer
+data_list <- list(beverages)
+
+plot_str(data_list, type="r")
+
+```
+
+```{r DataSet_Characteristics, echo=FALSE, message=FALSE, warning=FALSE}
+
+dim(beverages)
+summary(beverages)
+object.size(beverages)
+```
+
+The dataset is comprised of 33 variables and 2571 observations. At first glance, it is clear that some variables have missing values that will need to be addressed. All the variables beside Brand.code are numeric.  
+
+# Data Exploration and Statistic Measures
+
+The purpose of the data exploration and statistic measures phase is to understand the data to determine how to process the dataset for modelling.  
+
+## Descriptive Statistics
+
+Descriptive statistics were calculated to examine the basic features of the data.
+
+```{r Descriptive_statistic_matrix, echo=FALSE, message=FALSE, warning=FALSE}
+
+#Calculate mean missing values per variable
+missing_values <- beverages %>% 
+  summarize_all(funs(sum(is.na(.))))
+
+missing_values_ratio <- beverages %>% 
+  summarize_all(funs(sum(is.na(.)) / length(.)*100))
+
+#Use Describe Package to calculate Descriptive Statistic
+(beverages_d <- describe(beverages, na.rm=TRUE, interp=FALSE, skew=TRUE, ranges=TRUE, trim=.1, type=3, check=TRUE, fast=FALSE, quant=c(.25,.75), IQR=TRUE))
+
+beverages_d$missing <- t(missing_values)
+beverages_d$miss_ratio <- t(round(missing_values_ratio,4))
+
+beverages_d <- beverages_d %>% 
+  dplyr::select(n, missing, miss_ratio, mean, sd, min, max, skew, kurtosis, median, IQR, Q0.25, Q0.75)
+
+kable(beverages_d)
+```
+
+From the skewness coefficient, we observed that some variables may have a right skewed distribution (PSC.CO2, Temperature, Oxygen.Filler, Air.Pressurer) or a left skewed distribution (Filler.Speed, MFR). As we observed prior, we have missing values for some of the variables, we will need to take this into considerations.
+
+##Analysis of predictors  
+
+We will now examined each predictor to understand their distribution and determine whether any transformation is required.
+
+```{r Histograms, echo=FALSE, message=FALSE, warning=FALSE}
+
+# from DataExplorer Package
+plot_histogram(beverages)
+```
+
+##Variable to Variable Analysis   
+
+###Correlation Analysis   
+
+The correlation matrix shown below highlights correlations among several predictor variables. Correlation between between 
+
+```{r correlation_matrix, echo=FALSE, message=FALSE, warning=FALSE}  
+
+# From DataExplorer Package
+plot_correlation(beverages, use = "pairwise.complete.obs")
+
+```
+
+
+Let us now look at the correlation between the response (pH) variable and the predictors.
+
+```{r correlation_individual, echo=FALSE, message=FALSE, warning=FALSE}
+
+# we need to set-up table and format it with Kable
+cor(beverages$PH, beverages$Carb.Volume, use="complete.obs")
+```
+
+## Multicollinearity
+
+This section will test the predictor variables to determine if there is correlation among them. Variance inflaction factor (VIF) is used to detect multicollinearity, specifically among the entire set of predictors versus within pairs of variables.
+
+Testing for collinearity among the predictor variables, we see that  none of the numeric predictor variables appear to have a problem with collinearity based on their low VIF scores.
+
+
+```{r multcollinearity, echo=FALSE, message=FALSE, warning=FALSE}
+# from VIM Package
+beverages_predictors <- dplyr::select(beverages, -PH)
+
+numeric_fields <- dplyr::select_if(beverages_predictors, is.numeric)[, 3:15]
+
+usdm::vifcor(numeric_fields) 
+```
+
+# Data Transformation  
+
+## Missing Values  
+
+```{r Missing Vaues, echo=FALSE, message=FALSE, warning=FALSE}
+
+# From Data Explorer  
+
+plot_missing(beverages)
+
+```
+
+## Examination of Zero values  
+
+Some cases, a zero values are actually representative of missing data, is this the case here?  
+
+
+## Data Imputation  
+
+Based on the missing data and possibly zero-value data, what do we do, drop predictor, impute, ... ?
+
+
+## Data Transformation  
+
+To address skewness, we may want to transform data, using boxcox?  
+
+
+# Model Buidlings  
+
+## Data Splitting 
+
+## Model 1 - Multilinear Regression ???
+
+## Model 2 - SVM ??
+
+## Model 3 - ???
+
+# Model Selection & Evaluation 
+
+## Selecting Best Model  
+
+The following criteria will be used to determine the best model  
+Accuracy ?
+AIC / BIC ?
+RMSE      ?  
+Business Requirements (let's make them up!)  
+
+## Evaluation  
+
+# Conclusing  
+
+# References:  
+**EDA**  
+https://cran.r-project.org/web/packages/DataExplorer/vignettes/dataexplorer-intro.html  
+
