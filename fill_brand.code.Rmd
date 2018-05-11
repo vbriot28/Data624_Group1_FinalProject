@@ -1,0 +1,37 @@
+---
+title: "BHao_FinalProject"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd('/Users/brucehao/Google Drive/CUNY/git/DATA624/FinalProject')
+data = read.csv('/Users/brucehao/Google Drive/CUNY/git/DATA624/FinalProject/StudentData.csv', 
+                stringsAsFactors = FALSE) 
+
+# drop ph since we will not have those values in true test case 
+data = data[,!(names(data) %in% c('PH'))]
+
+# impute missing values using medians for all but brand.code column 
+for (i in 2:ncol(data)){
+  data[is.na(data[,i]), i] = median(data[,i], na.rm=TRUE)
+}
+
+# split data; train set == brand.code is present; test set == brand.code is missing 
+train = data[data$Brand.Code != '',]
+test  = data[data$Brand.Code == '',]
+
+# split data into X and Y; also convert data to matrices to use with glmnet model 
+trainX = as.matrix(subset(train, select = -c(Brand.Code)))
+trainY = as.matrix(train$Brand.Code)
+testX = as.matrix(subset(test, select = -c(Brand.Code)))
+testY = as.matrix(test$Brand.Code)
+
+# fit using glmnet model and then output predicted classes 
+library(glmnet)
+glmnet_model = cv.glmnet(trainX, trainY, family = 'multinomial', type.measure = 'mae')
+glmnet_predict = predict(glmnet_model, newx = testX, type = 'class')
+
+# row numbers in output matrix indicate row numbers in source file 
+```
+
