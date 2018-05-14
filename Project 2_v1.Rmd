@@ -45,6 +45,8 @@ library(caret)        # correlation
 library(corrplot)     # Correcation
 library(mice)         # Imputation
 library(MASS)         # BoxCox Transformation
+
+library(forecast)     #alternate transform
 ```
 
 
@@ -400,7 +402,37 @@ The lambda for predictor Oxygen.Filler is `r lambda.Oxigen_Filler`
 beverages_v3$PSCT = (beverages_v3$PSC ^ lambda.PSC - 1)/lambda.PSC  
 beverages_v3$PSC.FillT = (beverages_v3$PSC.Fill ^ lambda.PSC_Fill - 1)/lambda.PSC_Fill  
 beverages_v3$PSCT.CO2T = (beverages_v3$PSC.CO2 ^ lambda.PSC_CO2 - 1)/lambda.PSC_CO2  
-beverages_v3$Oxygen.FillerT = (beverages_v3$Oxygen.Filler ^ lambda.Oxigen_Filler - 1)/lambda.Oxigen_Filler
+beverages_v3$Oxygen.FillerT = (beverages_v3$Oxygen.Filler ^ lambda.Oxygen_Filler - 1)/lambda.Oxygen_Filler
+```
+
+```{r, alternate to boxcox transforms, echo=FALSE, message = FALSE, warning = FALSE}
+
+# this is alternate transform using simplfied methods
+# transform for Oxygen.Filler, PSC, PSC Fill, PSC O2
+# adding these updated values to beverages_v2
+
+#Log tansform is simple, but does not reduce skew as much box-cox, however normal qq plot are simliar
+#
+#beverages_v3$Oxygen.FillerT2 <- log(beverages_v3$Oxygen.Filler)
+#compare
+#qqnorm(beverages_v3$Oxygen.FillerT2)
+#qqnorm(beverages_v3$Oxygen.FillerT)
+
+# PSC - square-root  - same result as boxcox
+#beverages_v3$PSCT2 <- sqrt(beverages_v3$PSC)
+
+#PSC.Fill - BoxCox found with lambda = .139, not signficantly better than a square root, lambda = .5 = square root
+## lambda <- BoxCox.lambda(beverages_v3$PSC.Fill)  
+## beverages_v3$PSC.FillT3 <- BoxCox(beverages$PSC.Fill,lambda)
+
+#beverages_v3$PSC.FillT2 <- sqrt(beverages_v3$PSC.Fill)
+
+#PSC.CO2 between 0 and .24
+#square root transforms better than log+c, exp, or boxcox with lambda = .176 both skew & kurtosis lower
+beverages_v3$PSC.CO2T2 <- beverages_v3$PSC.CO2^(1/2)
+
+
+
 ```
 
 These complete the transformation on the data set, any additional tranfomations will be performed in the building model phase as they will be model dependent.  
