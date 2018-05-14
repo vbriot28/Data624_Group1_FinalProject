@@ -41,6 +41,7 @@ library(psych)        #EDA, describe function
 library(tidyverse)    #
 library(knitr)        #
 library(VIM)          #
+library(forecast)     # transform
 ```
 
 
@@ -174,7 +175,30 @@ beverages_v2 = beverages %>%
 ```
 
 
+```{r transformation}
 
+# transform for Oxygen.Filler, PSC, PSC Fill, PSC O2
+# adding these updated values to beverages_v2
+
+#Log tansform is simple and noramized Oxgen filler
+beverages_v2$Oxygen.Filler <- log(beverages$Oxygen.Filler)
+
+# PSC - square-root
+beverages_v2$PSC <- sqrt(beverages$PSC)
+
+#PSC.Fill - BoxCox found with lambda = .139, not signficantly better than a square root
+#lambda <- BoxCox.lambda(beverages$PSC.Fill) #.33
+#beverages_v2$PSC.Fill <- BoxCox(beverages$PSC.Fill,lambda)
+
+beverages_v2$PSC.Fill <- sqrt(beverages$PSC.Fill)
+
+#PSC.CO2 between 0 and .24
+#squareroot transforms better than log+c, exp, or boxcox with lambda = .176 both skew & kurtosis lower
+beverages_v2$PSC.CO2 <- sqrt(beverages$PSC.CO2)
+
+
+
+```
 
 ```{r Missing Vaues, echo=FALSE, message=FALSE, warning=FALSE}
 # From Data Explorer  
