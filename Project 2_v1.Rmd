@@ -452,7 +452,46 @@ plot_histogram(beverages_v3)
 
 ## Data Splitting 
 
+```{r}
+# Where Imputed data is the dataset such as beverages_v1
+set.seed(143) 
+sample = sample.int(n = nrow(beverages), size = floor(.70*nrow(beverages)), replace = F)
+
+beverages_v1_train = beverages_v1[sample, ]
+beverages_v1_test  = beverages_v1[-sample,]
+
+beverages_v2_train = beverages_v2[sample, ]
+beverages_v2_test  = beverages_v2[-sample,]
+
+beverages_v3_train = beverages_v3[sample, ]
+beverages_v3_test  = beverages_v3[-sample,]
+```
+
+
 ## Model 1 - Multilinear Regression ???
+
+```{r}
+myControl = trainControl(method = 'cv', number = 5, 
+  verboseIter = FALSE, savePredictions = TRUE)
+
+# first, start with a general linear model 
+model_glm = train(PH ~ ., data = beverages_v3_train, metric = 'RMSE', method = 'glm', 
+                       preProcess = c('center', 'scale'), trControl = myControl)
+
+# next, we'll try a glmnet model which combines lasso and ridge regression 
+model_glmnet = train(PH ~ ., data = beverages_v3_train, metric = 'RMSE', method = 'glmnet', 
+                       preProcess = c('center', 'scale'), trControl = myControl)
+
+# let's also model using random forest just for fun
+model_rf = train(PH ~ ., data = beverages_v3_train, metric = 'RMSE', method = 'ranger', 
+                 trControl = myControl)
+
+# compare models
+model_list = list(glm = model_glm, glmnet = model_glmnet, rf = model_rf)
+resamps = resamples(model_list) 
+dotplot(resamps, metric = 'RMSE')
+```
+
 
 ## Model 2 - SVM ??
 
